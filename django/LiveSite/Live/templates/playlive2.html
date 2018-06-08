@@ -1,0 +1,112 @@
+<!DOCTYPE html>  
+    <html lang="zh-CN">  
+    <head>  
+        <meta charset="UTF-8">  
+        <title>前端播放m3u8格式视频</title>  
+        <link href="/static/video-js.css" rel="stylesheet">
+
+        <script src="/static/video.js"></script>
+        <script src="/videojs-contrib-hls.js"></script>  
+        <script type="text/javascript">
+            var ws = null;
+
+            function WebSocketConn() {
+                if (ws != null && ws.readyState == 1) {
+                    log("已经在线");
+                    return
+                }
+                if ("WebSocket" in window) {
+                    ws = new WebSocket("ws://localhost:8888/websocket?id={{room_id}}");
+
+                    ws.onopen = function() {
+                        log('成功进入聊天室');
+                    };
+
+                    ws.onmessage = function(event) {
+                        var json = JSON.parse(event.data);
+                        log(json.name+" "+json.text);
+                        //log(event.data);
+                    };
+
+                    ws.onclose = function() {
+                        log("已经和服务器断开");
+                    };
+
+                    ws.onerror = function(event) {
+                        console.log("error " + event.data);
+                    };
+                } else {
+                    alert("WebSocket NOT supported by your Browser!");
+                }
+            }
+            window.onload = WebSocketConn;
+            function SendMsg() {
+                if (ws != null && ws.readyState == 1) {
+                    var msg = {
+                        name: '{{user.username}}',
+                        text: document.getElementById('msgtext').value,
+                    };
+
+                    ws.send(JSON.stringify(msg));
+                } else {
+                    log('请先进入聊天室');
+                }
+            }
+
+            function WebSocketClose() {
+                if (ws != null && ws.readyState == 1) {
+                    ws.close();
+                    log("发送断开服务器请求");
+                } else {
+                    log("当前没有连接服务器");
+                }
+            }
+
+            function log(text) {
+                var li = document.createElement('li');
+                li.appendChild(document.createTextNode(text));
+                document.getElementById('log').appendChild(li);
+                return false;
+            }
+        </script>
+    </head>  
+    <body> 
+        <div style="float:left;">
+        <video id="myVideo" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" width="1080" height="708" data-setup='{}' >      
+            <source id="source" src="http://127.0.0.1:8888/hls/MYSTREAM/index.m3u8"  type="application/x-mpegURL">  
+        </video> 
+        </div>
+            <div id="danmaku" style="float: right;margin-right:10%;">
+            <span>
+                Welcome {{ user.username }}!
+            </span>
+            <span> 
+                {% if user.uid %}
+                    <a href="/Live/logout/">LOGOUT</a>
+                {% else %}
+                    <a href="/Live/login/">Login</a>
+                {% endif %}
+            </span>
+            <a href="javascript:WebSocketConn()">进入聊天室</a> &nbsp;
+            <a href="javascript:WebSocketClose()">离开聊天室</a>
+            <br>
+            <br>
+            <input id="msgtext" type="text">
+            <input id="submit" type="submit" value="Send" onclick="SendMsg();">
+            <br>
+            <ol id="log"></ol>
+            </div>
+    </body>  
+    <script>      
+        // videojs 简单使用  
+        var myVideo = videojs('myVideo',{  
+            bigPlayButton : true,   
+            textTrackDisplay : false,   
+            posterImage: false,  
+            errorDisplay : false,  
+        })  
+        myVideo.play() // 视频播放  
+        myVideo.pause() // 视频暂停  
+    </script>  
+    </html>  
+

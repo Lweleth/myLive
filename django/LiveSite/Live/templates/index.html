@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% block login %}
+
+<form action="/Live/login/" method="POST">
+    {% csrf_token %}
+        <div>
+            <div>
+               {{ form.username }}
+                {% if  form.errors.username %}
+                    <span class="error-msg">{{ form.errors.username.0 }}</span>
+                {% endif %}
+            </div>
+            <span style="color:red;">{{ result.username }}</span>
+
+            <div>
+                {{ form.password }}
+                <span class="error-msg">{{ form.errors.password.0 }}</span>
+            </div>
+            <span style="color:red;">{{ result.password }}</span>
+            {% if message %}
+            <div>
+                <span class="error-msg" style="color:red;">{{ message }}</span>
+            </div>
+            {% endif %}
+            <!-- test show -->
+            <br>
+            {% for i , j in result.items %}
+                {{ i }} - {{ j }}<br>
+            {% endfor %}
+            <input type="submit" value="提交" />
+        </div>
+</form>
+
+
+{% endblock %}
